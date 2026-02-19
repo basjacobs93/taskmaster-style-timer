@@ -96,6 +96,36 @@
     opacity: 0.6;
   }
 
+  .mode-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 2vw;
+    margin-bottom: 4vh;
+  }
+
+  .mode-toggle button {
+    background: transparent;
+    border: 3px solid #e63322;
+    color: #e63322;
+    font-size: 3.5vw;
+    font-weight: 900;
+    padding: 1.5vh 4vw;
+    border-radius: 1vw;
+    cursor: pointer;
+    font-family: "CPMono_v07 Bold", monospace;
+    opacity: 0.4;
+  }
+
+  .mode-toggle button.active {
+    background: #e63322;
+    color: #000;
+    opacity: 1;
+  }
+
+  .mode-toggle button:active {
+    opacity: 0.8;
+  }
+
   .start-btn {
     background: #e63322;
     color: #000;
@@ -148,8 +178,12 @@
 
 <div id="setup">
   <div class="setup-panel">
-    <h1>SET TIME</h1>
-    <div class="time-inputs">
+    <div class="mode-toggle">
+      <button id="modeCountdown" class="active">COUNTDOWN</button>
+      <button id="modeStopwatch">STOPWATCH</button>
+    </div>
+    <h1 id="setupTitle">SET TIME</h1>
+    <div class="time-inputs" id="timeInputs">
       <div>
         <input type="number" id="inputMin" min="0" max="99" value="1" inputmode="numeric">
         <label>MIN</label>
@@ -171,11 +205,16 @@
   const inputSec = document.getElementById("inputSec");
   const startBtn = document.getElementById("startBtn");
   const closeBtn = document.getElementById("close-btn");
+  const setupTitle = document.getElementById("setupTitle");
+  const timeInputs = document.getElementById("timeInputs");
+  const modeCountdownBtn = document.getElementById("modeCountdown");
+  const modeStopwatchBtn = document.getElementById("modeStopwatch");
 
   let totalSeconds = 0;
   let intervalId = null;
   let running = false;
   let paused = false;
+  let mode = "countdown"; // "countdown" or "stopwatch"
 
   function formatTime(secs) {
     const m = Math.floor(secs / 60);
@@ -188,14 +227,18 @@
   }
 
   function tick() {
-    if (totalSeconds <= 0) {
-      clearInterval(intervalId);
-      intervalId = null;
-      running = false;
-      clockEl.classList.add("finished");
-      return;
+    if (mode === "countdown") {
+      if (totalSeconds <= 0) {
+        clearInterval(intervalId);
+        intervalId = null;
+        running = false;
+        clockEl.classList.add("finished");
+        return;
+      }
+      totalSeconds--;
+    } else {
+      totalSeconds++;
     }
-    totalSeconds--;
     render();
   }
 
@@ -211,8 +254,12 @@
 
   function start(minutes, seconds) {
     clockEl.classList.remove("finished");
-    totalSeconds = minutes * 60 + seconds;
-    if (totalSeconds <= 0) return;
+    if (mode === "countdown") {
+      totalSeconds = minutes * 60 + seconds;
+      if (totalSeconds <= 0) return;
+    } else {
+      totalSeconds = 0;
+    }
     render();
     running = true;
     paused = false;
@@ -228,7 +275,7 @@
   }
 
   function resume() {
-    if (totalSeconds <= 0) return;
+    if (mode === "countdown" && totalSeconds <= 0) return;
     running = true;
     paused = false;
     intervalId = setInterval(tick, 1000);
@@ -242,6 +289,22 @@
     clockEl.classList.remove("finished");
     hideTimer();
   }
+
+  function setMode(newMode) {
+    mode = newMode;
+    modeCountdownBtn.classList.toggle("active", mode === "countdown");
+    modeStopwatchBtn.classList.toggle("active", mode === "stopwatch");
+    if (mode === "stopwatch") {
+      setupTitle.textContent = "STOPWATCH";
+      timeInputs.style.display = "none";
+    } else {
+      setupTitle.textContent = "SET TIME";
+      timeInputs.style.display = "flex";
+    }
+  }
+
+  modeCountdownBtn.addEventListener("click", () => setMode("countdown"));
+  modeStopwatchBtn.addEventListener("click", () => setMode("stopwatch"));
 
   startBtn.addEventListener("click", () => {
     const m = parseInt(inputMin.value) || 0;

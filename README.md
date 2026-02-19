@@ -1,21 +1,22 @@
 # Taskbaster Clock
 
-A Taskmaster-style countdown clock for use on tablets and screens.
+A Taskmaster-style countdown clock and stopwatch for use on tablets and screens.
 
 ## Features
 
-- Full-screen red-on-black countdown timer
-- Configurable minutes and seconds via on-screen setup
-- Flashes when time runs out
-- Tap the clock to reset and configure a new time
+- Full-screen red-on-black display
+- **Countdown mode**: set minutes and seconds, flashes when time runs out
+- **Stopwatch mode**: counts up from 0:00
+- Tap the clock to pause/resume, tap X to go back to setup
 
 ## Usage
 
 Open `index.html` in a browser, or host on GitHub Pages.
 
-1. Set minutes and seconds
-2. Press **Start**
-3. Tap the clock at any time to stop and reconfigure
+1. Choose **Countdown** or **Stopwatch** mode
+2. Set minutes and seconds (countdown only)
+3. Press **Start**
+4. Tap the clock to pause/resume, tap X to reset
 
 ## GitHub Pages
 
