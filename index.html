@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Taskbaster Clock</title>
+<link href="https://fonts.cdnfonts.com/css/cpmonov07" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #000;
+    color: #e63322;
+    font-family: "CPMono_v07 Bold", monospace;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #clock {
+    font-size: 45vw;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    cursor: pointer;
+    user-select: none;
+    text-align: center;
+  }
+
+  /* Setup overlay */
+  #setup {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  #setup.hidden { display: none; }
+
+  .setup-panel {
+    text-align: center;
+    color: #e63322;
+  }
+
+  .setup-panel h1 {
+    font-size: 6vw;
+    margin-bottom: 4vh;
+    font-weight: 900;
+  }
+
+  .time-inputs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1vw;
+    margin-bottom: 5vh;
+  }
+
+  .time-inputs input {
+    background: #111;
+    border: 3px solid #e63322;
+    color: #e63322;
+    font-size: 10vw;
+    font-weight: 900;
+    width: 22vw;
+    text-align: center;
+    padding: 1vh 0;
+    border-radius: 1vw;
+    font-family: "CPMono_v07 Bold", monospace;
+    outline: none;
+  }
+
+  .time-inputs input:focus {
+    border-color: #ff5544;
+    box-shadow: 0 0 20px rgba(230, 51, 34, 0.3);
+  }
+
+  .time-inputs .separator {
+    font-size: 10vw;
+    font-weight: 900;
+  }
+
+  .time-inputs label {
+    font-size: 2.5vw;
+    display: block;
+    margin-top: 1vh;
+    opacity: 0.6;
+  }
+
+  .start-btn {
+    background: #e63322;
+    color: #000;
+    border: none;
+    font-size: 5vw;
+    font-weight: 900;
+    padding: 2vh 8vw;
+    border-radius: 1.5vw;
+    cursor: pointer;
+    font-family: "CPMono_v07 Bold", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .start-btn:active {
+    background: #ff5544;
+  }
+
+  /* Flashing when time is up */
+  @keyframes flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  #clock.finished {
+    animation: flash 0.5s infinite;
+  }
+
+  #close-btn {
+    position: fixed;
+    top: 2vh;
+    right: 2vw;
+    color: #e63322;
+    font-size: 4vmin;
+    cursor: pointer;
+    user-select: none;
+    opacity: 0.5;
+    z-index: 5;
+    display: none;
+    line-height: 1;
+  }
+
+  #close-btn:active { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div id="close-btn">&times;</div>
+<div id="clock">0:00</div>
+
+<div id="setup">
+  <div class="setup-panel">
+    <h1>SET TIME</h1>
+    <div class="time-inputs">
+      <div>
+        <input type="number" id="inputMin" min="0" max="99" value="1" inputmode="numeric">
+        <label>MIN</label>
+      </div>
+      <span class="separator">:</span>
+      <div>
+        <input type="number" id="inputSec" min="0" max="59" value="0" inputmode="numeric">
+        <label>SEC</label>
+      </div>
+    </div>
+    <button class="start-btn" id="startBtn">Start</button>
+  </div>
+</div>
+
+<script>
+  const clockEl = document.getElementById("clock");
+  const setupEl = document.getElementById("setup");
+  const inputMin = document.getElementById("inputMin");
+  const inputSec = document.getElementById("inputSec");
+  const startBtn = document.getElementById("startBtn");
+  const closeBtn = document.getElementById("close-btn");
+
+  let totalSeconds = 0;
+  let intervalId = null;
+  let running = false;
+  let paused = false;
+
+  function formatTime(secs) {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return m + ":" + String(s).padStart(2, "0");
+  }
+
+  function render() {
+    clockEl.textContent = formatTime(totalSeconds);
+  }
+
+  function tick() {
+    if (totalSeconds <= 0) {
+      clearInterval(intervalId);
+      intervalId = null;
+      running = false;
+      clockEl.classList.add("finished");
+      return;
+    }
+    totalSeconds--;
+    render();
+  }
+
+  function showTimer() {
+    setupEl.classList.add("hidden");
+    closeBtn.style.display = "block";
+  }
+
+  function hideTimer() {
+    setupEl.classList.remove("hidden");
+    closeBtn.style.display = "none";
+  }
+
+  function start(minutes, seconds) {
+    clockEl.classList.remove("finished");
+    totalSeconds = minutes * 60 + seconds;
+    if (totalSeconds <= 0) return;
+    render();
+    running = true;
+    paused = false;
+    showTimer();
+    intervalId = setInterval(tick, 1000);
+  }
+
+  function pause() {
+    clearInterval(intervalId);
+    intervalId = null;
+    running = false;
+    paused = true;
+  }
+
+  function resume() {
+    if (totalSeconds <= 0) return;
+    running = true;
+    paused = false;
+    intervalId = setInterval(tick, 1000);
+  }
+
+  function reset() {
+    clearInterval(intervalId);
+    intervalId = null;
+    running = false;
+    paused = false;
+    clockEl.classList.remove("finished");
+    hideTimer();
+  }
+
+  startBtn.addEventListener("click", () => {
+    const m = parseInt(inputMin.value) || 0;
+    const s = parseInt(inputSec.value) || 0;
+    start(m, s);
+  });
+
+  // Tap clock to pause/resume
+  clockEl.addEventListener("click", () => {
+    if (clockEl.classList.contains("finished")) return;
+    if (running) {
+      pause();
+    } else if (paused) {
+      resume();
+    }
+  });
+
+  // X button goes back to setup
+  closeBtn.addEventListener("click", () => {
+    reset();
+  });
+
+  // Auto-select input content on focus
+  inputMin.addEventListener("focus", () => inputMin.select());
+  inputSec.addEventListener("focus", () => inputSec.select());
+
+  // Enter key starts the timer
+  setupEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") startBtn.click();
+  });
+
+  // Resize font to fill screen nicely
+  function resizeClock() {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    // Scale based on whichever dimension is more constraining
+    const size = Math.min(vw * 0.42, vh * 0.7);
+    clockEl.style.fontSize = size + "px";
+  }
+
+  window.addEventListener("resize", resizeClock);
+  resizeClock();
+</script>
+</body>
+</html>
