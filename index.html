@@ -28,7 +28,6 @@
     font-weight: 900;
     line-height: 1;
     letter-spacing: -0.02em;
-    cursor: pointer;
     user-select: none;
     text-align: center;
   }
@@ -154,10 +153,9 @@
     animation: flash 0.5s infinite;
   }
 
-  #close-btn {
+  #close-btn, #pause-btn {
     position: fixed;
     top: 2vh;
-    right: 2vw;
     color: #e63322;
     font-size: 4vmin;
     cursor: pointer;
@@ -168,11 +166,15 @@
     line-height: 1;
   }
 
-  #close-btn:active { opacity: 1; }
+  #close-btn { right: 2vw; }
+  #pause-btn { left: 2vw; }
+
+  #close-btn:active, #pause-btn:active { opacity: 1; }
 </style>
 </head>
 <body>
 
+<div id="pause-btn">&#9646;&#9646;</div>
 <div id="close-btn">&times;</div>
 <div id="clock">0:00</div>
 
@@ -205,6 +207,7 @@
   const inputSec = document.getElementById("inputSec");
   const startBtn = document.getElementById("startBtn");
   const closeBtn = document.getElementById("close-btn");
+  const pauseBtn = document.getElementById("pause-btn");
   const setupTitle = document.getElementById("setupTitle");
   const timeInputs = document.getElementById("timeInputs");
   const modeCountdownBtn = document.getElementById("modeCountdown");
@@ -242,14 +245,20 @@
     render();
   }
 
+  function updatePauseBtn() {
+    pauseBtn.innerHTML = paused ? "&#9654;" : "&#9646;&#9646;";
+  }
+
   function showTimer() {
     setupEl.classList.add("hidden");
     closeBtn.style.display = "block";
+    pauseBtn.style.display = "block";
   }
 
   function hideTimer() {
     setupEl.classList.remove("hidden");
     closeBtn.style.display = "none";
+    pauseBtn.style.display = "none";
   }
 
   function start(minutes, seconds) {
@@ -272,12 +281,14 @@
     intervalId = null;
     running = false;
     paused = true;
+    updatePauseBtn();
   }
 
   function resume() {
     if (mode === "countdown" && totalSeconds <= 0) return;
     running = true;
     paused = false;
+    updatePauseBtn();
     intervalId = setInterval(tick, 1000);
   }
 
@@ -312,8 +323,8 @@
     start(m, s);
   });
 
-  // Tap clock to pause/resume
-  clockEl.addEventListener("click", () => {
+  // Pause button to pause/resume
+  pauseBtn.addEventListener("click", () => {
     if (clockEl.classList.contains("finished")) return;
     if (running) {
       pause();
